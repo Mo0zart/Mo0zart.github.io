@@ -1,0 +1,110 @@
+/* Resume Bubble & Animation Styles */
+/* Resume Section Background (Animated) */
+.resume-section-animated {
+    position: relative;
+    overflow: hidden;
+    /* Darken background slightly to make particles pop, similar to hero */
+    background: radial-gradient(circle at center, #1a0b2e 0%, #02050a 100%);
+    isolation: isolate;
+    padding: 60px 0;
+}
+
+#resume-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Glassmorphism Bubble for Content */
+.resume-glass-bubble {
+    position: relative;
+    z-index: 2;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+
+
+/* Custom Download Button (Inspired by little-penguin-13 but themed) */
+/* Custom Download Button (Icon Slide Reveal) */
+.download-btn-custom {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 30px;
+    background: var(--accent-color);
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 50px;
+    text-decoration: none;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 5px 15px rgba(124, 58, 237, 0.4);
+}
+
+.download-btn-custom span {
+    position: relative;
+    z-index: 2;
+    transition: transform 0.3s ease;
+}
+
+.download-btn-custom i {
+    position: relative;
+    font-size: 1.2rem;
+    width: 0;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.download-btn-custom:hover {
+    box-shadow: 0 8px 25px rgba(124, 58, 237, 0.6);
+    color: white;
+    padding-right: 20px;
+    /* Adjust padding slightly to accommodate movement if needed, or keep consistent */
+}
+
+.download-btn-custom:hover i {
+    width: 20px;
+    /* Reveal width */
+    opacity: 1;
+    transform: translateX(0);
+    margin-left: 10px;
+    /* Add visual spacing */
+}
+
+/* Shine Effect */
+.download-btn-custom::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+    z-index: 1;
+}
+
+.download-btn-custom:hover::before {
+    left: 100%;
+}
+
+.download-btn-custom:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+}
