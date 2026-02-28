@@ -9,6 +9,12 @@
 (function () {
   "use strict";
 
+  // Visit tracking variables
+  const pageStartTime = Date.now();
+  const sessionId = Math.random().toString(36).substring(2, 9).toUpperCase();
+  let exitNotificationSent = false;
+
+
   /**
    * Universal Loader
    */
@@ -782,57 +788,29 @@
    * Visit Notification (Discord Webhook)
    */
   async function sendVisitNotification() {
-    const webhookUrl = 'https://discord.com/api/webhooks/1477091729793617971/cURrFVeu7YyaF_YDrGkJuXs0-L51wzPxdz4gnqmQc57lb2UCXY8U9Vl_s7ymeg_nlZc6';
-    const page = window.location.hash || '#hero';
-    const pageTitle = document.title || 'Portfolio';
-
-    // 1. Gather Basic Browser Info
-    const referrer = document.referrer || 'Direct / Unknown';
-    const language = navigator.language || 'Unknown';
-    const screenRes = `${window.screen.width}x${window.screen.height}`;
-    const userAgent = navigator.userAgent;
-
-    // Simplified OS/Browser detection
-    let platform = "Unknown Device";
-    if (userAgent.indexOf("Win") !== -1) platform = "Windows";
-    if (userAgent.indexOf("Mac") !== -1) platform = "macOS";
-    if (userAgent.indexOf("Android") !== -1) platform = "Android";
-    if (userAgent.indexOf("like Mac") !== -1) platform = "iOS";
-    if (userAgent.indexOf("Linux") !== -1) platform = "Linux";
-
-    let browser = "Unknown Browser";
-    if (userAgent.indexOf("Chrome") !== -1) browser = "Chrome";
-    else if (userAgent.indexOf("Firefox") !== -1) browser = "Firefox";
-    else if (userAgent.indexOf("Safari") !== -1) browser = "Safari";
-    else if (userAgent.indexOf("Edge") !== -1) browser = "Edge";
-
-    // 2. Fetch Location Info (IP, City, Country, ISP)
-    let locationData = { ip: "Blocked/Unavailable", city: "", region: "", country_name: "", org: "Unknown ISP" };
-    try {
-      const response = await fetch('https://ipapi.co/json/');
-      if (response.ok) {
-        locationData = await response.json();
-      }
-    } catch (e) {
-      // Fetch might be blocked by ad-blockers
+    // Filter out 800x600 resolution (likely scrapers)
+    if (window.screen.width === 800 && window.screen.height === 600) {
+      return;
     }
 
-    const locationString = locationData.city ? `${locationData.city}, ${locationData.region}, ${locationData.country_name}` : "Unknown Location";
+    const webhookUrl = 'https://discord.com/api/webhooks/1477091729793617971/cURrFVeu7YyaF_YDrGkJuXs0-L51wzPxdz4gnqmQc57lb2UCXY8U9Vl_s7ymeg_nlZc6';
+    const page = window.location.hash || '#hero';
 
-    // 3. Construct Discord Payload
+    // Gather Basic Info (Excluding Location, Language, and Device Info)
+    const referrer = document.referrer || 'Direct / Unknown';
+    const screenRes = `${window.screen.width}x${window.screen.height}`;
+
+    // Construct Discord Payload
     const discordPayload = {
       embeds: [{
         title: "👀 New Visitor Detected",
         description: `A visitor is viewing your portfolio.`,
         color: 0x7c3aed, // Purple theme
         fields: [
-          { name: "📍 Location", value: locationString, inline: false },
-          { name: "🏢 ISP", value: locationData.org || 'Unknown', inline: true },
-          { name: "📄 Page Loaded", value: page, inline: true },
+          { name: " Page Loaded", value: page, inline: true },
           { name: "🔗 Referrer", value: referrer, inline: false },
-          { name: "📱 Device Info", value: `${browser} on ${platform}`, inline: true },
           { name: "🖥️ Screen", value: screenRes, inline: true },
-          { name: "🌐 Language", value: language, inline: true },
+          { name: " Session ID", value: sessionId, inline: true },
           { name: "🔗 URL", value: window.location.href, inline: false }
         ],
         footer: { text: "Portfolio Analytics Tool" },
@@ -847,9 +825,64 @@
         body: JSON.stringify(discordPayload)
       });
     } catch (error) {
-      // Silently catch errors to not disrupt user experience
+      // Silently catch errors
     }
   }
+
+  /**
+   * Exit Notification (Time Spent)
+   */
+  async function sendExitNotification() {
+    if (exitNotificationSent) return;
+
+    // Filter out 800x600 resolution (likely scrapers)
+    if (window.screen.width === 800 && window.screen.height === 600) {
+      return;
+    }
+
+    exitNotificationSent = true;
+
+    const webhookUrl = 'https://discord.com/api/webhooks/1477091729793617971/cURrFVeu7YyaF_YDrGkJuXs0-L51wzPxdz4gnqmQc57lb2UCXY8U9Vl_s7ymeg_nlZc6';
+    const page = window.location.hash || '#hero';
+
+    const durationMs = Date.now() - pageStartTime;
+    const durationSec = Math.floor(durationMs / 1000);
+    const minutes = Math.floor(durationSec / 60);
+    const seconds = durationSec % 60;
+    const durationString = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+
+    const discordPayload = {
+      embeds: [{
+        title: "👋 Visitor Left",
+        description: `A visitor has finished viewing your portfolio.`,
+        color: 0xe74c3c, // Red theme for exit
+        fields: [
+          { name: "⏱️ Time Spent", value: durationString, inline: true },
+          { name: "🆔 Session ID", value: sessionId, inline: true },
+          { name: "📄 Last Page", value: page, inline: true }
+        ],
+        footer: { text: "Portfolio Analytics Tool" },
+        timestamp: new Date().toISOString()
+      }]
+    };
+
+    try {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(discordPayload),
+        keepalive: true // Important for exit tracking
+      });
+    } catch (error) { }
+  }
+
+  // Listen for page exit/visibility change
+  window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      sendExitNotification();
+    }
+  });
+  window.addEventListener('pagehide', sendExitNotification);
 
   // Load everything then initialize
   window.addEventListener('DOMContentLoaded', async () => {
