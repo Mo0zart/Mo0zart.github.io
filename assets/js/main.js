@@ -785,7 +785,7 @@
   }
 
   /**
-   * Visit Notification (Discord Webhook)
+   * Visit Notification
    */
   async function sendVisitNotification() {
     // Filter out 800x600 resolution (likely scrapers)
@@ -796,7 +796,13 @@
     const webhookUrl = 'https://discord.com/api/webhooks/1477091729793617971/cURrFVeu7YyaF_YDrGkJuXs0-L51wzPxdz4gnqmQc57lb2UCXY8U9Vl_s7ymeg_nlZc6';
     const page = window.location.hash || '#hero';
 
-    // Gather Basic Info (Excluding Location, Language, and Device Info)
+    // (Timezone & Language)
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown/UTC";
+    const userLanguage = navigator.language || "Unknown";
+
+    let locationGuess = userTimezone.split('/').pop().replace('_', ' ');
+    const displayLocation = `${locationGuess} (${userLanguage})`;
+
     const referrer = document.referrer || 'Direct / Unknown';
     const screenRes = `${window.screen.width}x${window.screen.height}`;
 
@@ -807,10 +813,11 @@
         description: `A visitor is viewing your portfolio.`,
         color: 0x7c3aed, // Purple theme
         fields: [
-          { name: " Page Loaded", value: page, inline: true },
+          { name: "🌍 TZ/LNG", value: displayLocation, inline: false },
+          { name: "📄 Page Loaded", value: page, inline: true },
           { name: "🔗 Referrer", value: referrer, inline: false },
           { name: "🖥️ Screen", value: screenRes, inline: true },
-          { name: " Session ID", value: sessionId, inline: true },
+          { name: "🆔 Session ID", value: sessionId, inline: true },
           { name: "🔗 URL", value: window.location.href, inline: false }
         ],
         footer: { text: "Portfolio Analytics Tool" },
