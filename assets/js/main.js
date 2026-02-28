@@ -827,7 +827,6 @@
         color: 0x7c3aed, // Purple theme
         fields: [
           { name: "📍 Location", value: locationString, inline: false },
-          { name: "🌐 IP Address", value: locationData.ip, inline: true },
           { name: "🏢 ISP", value: locationData.org || 'Unknown', inline: true },
           { name: "📄 Page Loaded", value: page, inline: true },
           { name: "🔗 Referrer", value: referrer, inline: false },
