@@ -11,7 +11,7 @@
 
   // Visit tracking variables
   const pageStartTime = Date.now();
-  const sessionId = Math.random().toString(36).substring(2, 9).toUpperCase();
+  const session = Math.random().toString(36).substring(2, 9).toUpperCase();
   let exitNotificationSent = false;
 
 
@@ -817,7 +817,7 @@
           { name: "📄 Page Loaded", value: page, inline: true },
           { name: "🔗 Referrer", value: referrer, inline: false },
           { name: "🖥️ Screen", value: screenRes, inline: true },
-          { name: "🆔 Session ID", value: sessionId, inline: true },
+          { name: "🆔 Session", value: session, inline: true },
           { name: "🔗 URL", value: window.location.href, inline: false }
         ],
         footer: { text: "Portfolio Analytics Tool" },
@@ -865,7 +865,7 @@
         color: 0xe74c3c, // Red theme for exit
         fields: [
           { name: "⏱️ Time Spent", value: durationString, inline: true },
-          { name: "🆔 Session ID", value: sessionId, inline: true },
+          { name: "🆔 Session", value: session, inline: true },
           { name: "📄 Last Page", value: page, inline: true }
         ],
         footer: { text: "Portfolio Analytics Tool" },
