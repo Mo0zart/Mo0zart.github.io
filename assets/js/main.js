@@ -331,9 +331,10 @@
       animate();
     }
 
-    // Init Hero and Resume Particles
+    // Init Hero, Resume and Contact Particles
     initParticles('#hero-canvas', '#hero');
     initParticles('#resume-canvas', '#resume');
+    initParticles('#contact-canvas', '#contact');
 
     /**
      * Initiate Pure Counter
@@ -693,12 +694,162 @@
       // Create particles rapidly
       particleInterval = setInterval(createParticle, 50);
     });
-
     btn.addEventListener('mouseleave', () => {
       clearInterval(particleInterval);
-      // Clean up any remaining particles after a delay? 
-      // No, let them finish their animation.
     });
+  }
+
+  /**
+   * Discord Contact Form Handler
+   */
+  function initDiscordForm() {
+    const form = document.getElementById('discord-contact-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const btn = document.getElementById('submit-btn');
+      const loader = document.getElementById('form-loader');
+      const errorDiv = document.getElementById('form-error');
+      const successDiv = document.getElementById('form-success');
+
+      if (btn) btn.style.display = 'none';
+      if (loader) loader.style.display = 'block';
+      if (errorDiv) errorDiv.style.display = 'none';
+      if (successDiv) successDiv.style.display = 'none';
+
+      const formData = {
+        name: document.getElementById('name-field').value,
+        email: document.getElementById('email-field').value,
+        contact_way: document.getElementById('contact-way-field').value || 'Not provided',
+        message: document.getElementById('message-field').value
+      };
+
+      const webhookUrl = 'https://discord.com/api/webhooks/1477067828019466333/z1Y45lyU_HaGA9pK6UYIJtKSI7jNxJ3FgeYuEFmz0i2qjtlh35f-nM1aptf8UCPSdxGz';
+
+      const discordPayload = {
+        embeds: [{
+          title: "🚀 New Contact Form Submission",
+          description: "You have a new message from your portfolio website.",
+          color: 0x7c3aed,
+          fields: [
+            { name: "👤 Name", value: formData.name, inline: true },
+            { name: "📧 Email", value: formData.email, inline: true },
+            { name: "🔗 Additional Contact", value: formData.contact_way, inline: false },
+            { name: "💬 Message", value: formData.message, inline: false }
+          ],
+          footer: { text: "Portfolio Contact Form" },
+          timestamp: new Date().toISOString()
+        }]
+      };
+
+      try {
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(discordPayload)
+        });
+
+        if (response.ok) {
+          if (successDiv) successDiv.style.display = 'block';
+          form.reset();
+        } else {
+          throw new Error('Failed to send message to Discord.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        if (errorDiv) {
+          errorDiv.innerText = 'Something went wrong. Please try again later.';
+          errorDiv.style.display = 'block';
+        }
+        if (btn) btn.style.display = 'inline-block';
+      } finally {
+        if (loader) loader.style.display = 'none';
+        if (successDiv && successDiv.style.display === 'block') {
+          setTimeout(() => {
+            successDiv.style.display = 'none';
+            if (btn) btn.style.display = 'inline-block';
+          }, 5000);
+        } else {
+          if (btn) btn.style.display = 'inline-block';
+        }
+      }
+    });
+  }
+
+  /**
+   * Visit Notification (Discord Webhook)
+   */
+  async function sendVisitNotification() {
+    const webhookUrl = 'https://discord.com/api/webhooks/1477091729793617971/cURrFVeu7YyaF_YDrGkJuXs0-L51wzPxdz4gnqmQc57lb2UCXY8U9Vl_s7ymeg_nlZc6';
+    const page = window.location.hash || '#hero';
+    const pageTitle = document.title || 'Portfolio';
+
+    // 1. Gather Basic Browser Info
+    const referrer = document.referrer || 'Direct / Unknown';
+    const language = navigator.language || 'Unknown';
+    const screenRes = `${window.screen.width}x${window.screen.height}`;
+    const userAgent = navigator.userAgent;
+
+    // Simplified OS/Browser detection
+    let platform = "Unknown Device";
+    if (userAgent.indexOf("Win") !== -1) platform = "Windows";
+    if (userAgent.indexOf("Mac") !== -1) platform = "macOS";
+    if (userAgent.indexOf("Android") !== -1) platform = "Android";
+    if (userAgent.indexOf("like Mac") !== -1) platform = "iOS";
+    if (userAgent.indexOf("Linux") !== -1) platform = "Linux";
+
+    let browser = "Unknown Browser";
+    if (userAgent.indexOf("Chrome") !== -1) browser = "Chrome";
+    else if (userAgent.indexOf("Firefox") !== -1) browser = "Firefox";
+    else if (userAgent.indexOf("Safari") !== -1) browser = "Safari";
+    else if (userAgent.indexOf("Edge") !== -1) browser = "Edge";
+
+    // 2. Fetch Location Info (IP, City, Country, ISP)
+    let locationData = { ip: "Blocked/Unavailable", city: "", region: "", country_name: "", org: "Unknown ISP" };
+    try {
+      const response = await fetch('https://ipapi.co/json/');
+      if (response.ok) {
+        locationData = await response.json();
+      }
+    } catch (e) {
+      // Fetch might be blocked by ad-blockers
+    }
+
+    const locationString = locationData.city ? `${locationData.city}, ${locationData.region}, ${locationData.country_name}` : "Unknown Location";
+
+    // 3. Construct Discord Payload
+    const discordPayload = {
+      embeds: [{
+        title: "👀 New Visitor Detected",
+        description: `A visitor is viewing your portfolio.`,
+        color: 0x7c3aed, // Purple theme
+        fields: [
+          { name: "📍 Location", value: locationString, inline: false },
+          { name: "🌐 IP Address", value: locationData.ip, inline: true },
+          { name: "🏢 ISP", value: locationData.org || 'Unknown', inline: true },
+          { name: "📄 Page Loaded", value: page, inline: true },
+          { name: "🔗 Referrer", value: referrer, inline: false },
+          { name: "📱 Device Info", value: `${browser} on ${platform}`, inline: true },
+          { name: "🖥️ Screen", value: screenRes, inline: true },
+          { name: "🌐 Language", value: language, inline: true },
+          { name: "🔗 URL", value: window.location.href, inline: false }
+        ],
+        footer: { text: "Portfolio Analytics Tool" },
+        timestamp: new Date().toISOString()
+      }]
+    };
+
+    try {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(discordPayload)
+      });
+    } catch (error) {
+      // Silently catch errors to not disrupt user experience
+    }
   }
 
   // Load everything then initialize
@@ -707,6 +858,10 @@
     initModules();
     // Add particle effect to hero button after modules (and DOM content) are ready
     initHeroButtonParticles();
+    // Initialize contact form handler
+    initDiscordForm();
+    // Send visit notification
+    sendVisitNotification();
   });
 
 })();
